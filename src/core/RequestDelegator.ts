@@ -3,6 +3,7 @@ import { APIGatewayEvent } from 'aws-lambda';
 
 export default class RequestDelegator {
   private requestHandlerMap: Map<string, {
+    controller: Controller,
     get: Function | null,
     post: Function | null,
     delete: Function | null,
@@ -17,19 +18,20 @@ export default class RequestDelegator {
     });
   }
 
-  registerEndpoint(requestMethod: string, path: string, handler: Function) {
+  registerEndpoint(requestMethod: string, path: string, handler: Function, controller: Controller) {
     let endpointHandlers = this.requestHandlerMap.get(path);
     if (endpointHandlers) {
       endpointHandlers[requestMethod.toLocaleLowerCase()] = handler;
     } else {
       this.requestHandlerMap.set(path,{
+        controller,
         get: null,
         post: null,
         delete: null,
         patch: null,
         put: null
       });
-      this.registerEndpoint(requestMethod, path, handler);
+      this.registerEndpoint(requestMethod, path, handler, controller);
     }
   }
 
@@ -38,7 +40,12 @@ export default class RequestDelegator {
     if (endpointHandlers) {
       let handler = endpointHandlers[apiGatewayEvent.httpMethod.toLocaleLowerCase()];
       if (handler) {
-        return await handler(apiGatewayEvent);
+        // Bind the controllers scope to the function. This is required since
+        // calling the function through a pointer to the class automatically initializes
+        // *this* with a pointer to the class in the function scope, while calling the 
+        // function without the class doesn't.
+        let boundHandler = handler.bind(endpointHandlers.controller, apiGatewayEvent);
+        return await boundHandler();
       } else console.error('No request handler');
     } else console.error('No endpoint handler');
 

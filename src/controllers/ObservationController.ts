@@ -4,15 +4,11 @@ import { APIGatewayEvent } from 'aws-lambda';
 import ObservationDAO from '../dao/ObservationDAO';
 import { Observation } from '../models/Observation';
 
-var self: ObservationController;
-
 export default class ObservationController implements Controller {
-  constructor(private dao: ObservationDAO) {
-    self = this;
-  }
+  constructor(private dao: ObservationDAO) {}
 
   async findAll(event: APIGatewayEvent) {
-    let observations = await self.dao.findAll();
+    let observations = await this.dao.findAll();
     return {
       statusCode: 200,
       body: JSON.stringify(observations)
@@ -25,7 +21,7 @@ export default class ObservationController implements Controller {
       statusCode = 200;
       let obs = new Observation(JSON.parse(event.body));
       obs.ip = event.requestContext.identity.sourceIp;
-      await self.dao.putOne(obs);
+      await this.dao.putOne(obs);
     } else {
       statusCode = 400;
     }
@@ -37,7 +33,7 @@ export default class ObservationController implements Controller {
   }
 
   init(requestDelegator: RequestDelegator) {
-    requestDelegator.registerEndpoint('get', '/observations', this.findAll);
-    requestDelegator.registerEndpoint('put', '/observations', this.put);
+    requestDelegator.registerEndpoint('get', '/observations', this.findAll, this);
+    requestDelegator.registerEndpoint('put', '/observations', this.put, this);
   }
 }
