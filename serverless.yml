@@ -27,17 +27,20 @@ package:
     - .env
 
 functions:
-  observations:
-    handler: handler.observations
+  getObservations:
+    handler: handler.getObservations
     events:
       - http:
           path: observations
           method: get
           cors: true
+  addObservation:
+    handler: handler.addObservation
+    events:
       - http:
           path: observations
           method: put
-          cors: true
+          cors: true  
 
 plugins:
   - serverless-plugin-typescript

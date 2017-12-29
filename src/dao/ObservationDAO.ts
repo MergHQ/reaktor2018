@@ -1,4 +1,4 @@
-import DataAccessObject from './DataAccessObects';
+import DataAccessObject from './DataAccessObject';
 import { Observation } from '../models/Observation';
 import * as vogels from 'vogels';
 import * as joi from 'joi';
@@ -15,7 +15,7 @@ export default class ObservationDAO implements DataAccessObject<Observation> {
         if (err) {
           reject(err);
         } else {
-          resolve(new Observation(result));
+          resolve(new Observation(result.attrs));
         }
       });
     });
@@ -39,7 +39,7 @@ export default class ObservationDAO implements DataAccessObject<Observation> {
         if (err) {
           reject(err);
         } else {
-          resolve(res);
+          resolve(res.attrs);
         }
       });
     });

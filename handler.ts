@@ -2,17 +2,56 @@
 import * as bluebird from 'bluebird';
 global.Promise = bluebird;
 
-import RequestDelegator from './src/core/RequestDelegator';
-import ObservationController from './src/controllers/ObservationController';
 import ObservationDAO from './src/dao/ObservationDAO';
+import { Observation } from './src/models/Observation';
 
-export async function observations(event, context, callback) {
+export async function getObservations(event, context, callback) {
   // Initialize data access object for observations.
   let observationDao = new ObservationDAO();
   observationDao.createTables();
 
-  let requestDelegator = new RequestDelegator([new ObservationController(observationDao)]);
-  let response = await new Promise((resolve, reject) => requestDelegator.delegateRequest(event).then(res => resolve(res)));
+  let observations: Observation[];
+  try {
+    observations = await observationDao.findAll();
+  } catch (e) {
+    if (e) {
+      console.error(e);
+      return createResponse(500, null, e.message, callback);
+    } else if(!e) {
+      return createResponse(404, [], 'No results', callback);
+    }
+  }
+  createResponse(200, observations, null, callback);
+}
 
-  callback(null, response);
+export async function addObservation(event, context, callback) {
+  // Initialize data access object for observations.
+  let observationDao = new ObservationDAO();
+  observationDao.createTables();
+
+  if (event.body) {
+    try {
+      let obs = new Observation(JSON.parse(event.body));
+      let observation = await observationDao.putOne(obs);
+      createResponse(200, observation, null, callback);
+    } catch (e) {
+      console.error(e);
+      createResponse(500, null, e.message, callback);
+    }
+  } else {
+    createResponse(400, null, null, callback);
+  }
+}
+
+function createResponse(status: number, body: Object | null, message: string | null, callback: Function) {
+  body = {
+    ok: 200 === status,
+    message,
+    payload: body
+  };
+
+  return callback(null, {
+    statusCode: status,
+    body: JSON.stringify(body)
+  });
 }

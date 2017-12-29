@@ -13,7 +13,7 @@ export class Observation {
   temperature: number;
 
   constructor(obj?: any) {
-    Object.keys(this).forEach(key => {
+    Object.keys(obj).forEach(key => {
       this[key] = obj[key]
     });
   }
