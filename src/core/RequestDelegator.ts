@@ -21,9 +21,10 @@ export default class RequestDelegator {
   registerEndpoint(requestMethod: string, path: string, handler: Function, controller: Controller) {
     let endpointHandlers = this.requestHandlerMap.get(path);
     if (endpointHandlers) {
+      console.log(`Registering endpoint: ${requestMethod} ${path}`);
       endpointHandlers[requestMethod.toLocaleLowerCase()] = handler;
     } else {
-      this.requestHandlerMap.set(path,{
+      this.requestHandlerMap.set(path, {
         controller,
         get: null,
         post: null,
@@ -36,6 +37,7 @@ export default class RequestDelegator {
   }
 
   async delegateRequest(apiGatewayEvent: APIGatewayEvent) {
+    console.log('delegating');
     let endpointHandlers = this.requestHandlerMap.get(apiGatewayEvent.resource);
     if (endpointHandlers) {
       let handler = endpointHandlers[apiGatewayEvent.httpMethod.toLocaleLowerCase()];
@@ -45,7 +47,7 @@ export default class RequestDelegator {
         // *this* with a pointer to the class in the function scope, while calling the 
         // function without the class doesn't.
         let boundHandler = handler.bind(endpointHandlers.controller, apiGatewayEvent);
-        return await boundHandler();
+        return boundHandler();
       } else console.error('No request handler');
     } else console.error('No endpoint handler');
 

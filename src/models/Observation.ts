@@ -6,17 +6,14 @@ export enum Location {
   Dubai
 }
 
-
 export class Observation {
-  id: number;
+  id: string;
   location: number;
   locationStr?: string;
   temperature: number;
-  ip: string;
-  timestamp: Date;
 
   constructor(obj?: any) {
-    Object.keys(obj).forEach(key => {
+    Object.keys(this).forEach(key => {
       this[key] = obj[key]
     });
   }

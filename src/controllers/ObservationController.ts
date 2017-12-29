@@ -5,12 +5,26 @@ import ObservationDAO from '../dao/ObservationDAO';
 import { Observation } from '../models/Observation';
 
 export default class ObservationController implements Controller {
-  constructor(private dao: ObservationDAO) {}
+  constructor(private dao: ObservationDAO) { }
 
   async findAll(event: APIGatewayEvent) {
-    let observations = await this.dao.findAll();
+    let observations: Observation[];
+    let statusCode: number;
+    try {
+      observations = await this.dao.findAll();
+      statusCode = 200;
+    } catch (e) {
+      if (!e) {
+        // empty result
+        statusCode = 404;
+        observations = [];
+      } else {
+        throw e;
+      }
+    }
+
     return {
-      statusCode: 200,
+      statusCode,
       body: JSON.stringify(observations)
     };
   }
@@ -20,12 +34,15 @@ export default class ObservationController implements Controller {
     if (event.body) {
       statusCode = 200;
       let obs = new Observation(JSON.parse(event.body));
-      obs.ip = event.requestContext.identity.sourceIp;
-      await this.dao.putOne(obs);
+      try {
+        await this.dao.putOne(obs);
+      } catch (e) {
+        throw e;
+      }
     } else {
       statusCode = 400;
     }
-    
+
     return {
       statusCode,
       body: ''

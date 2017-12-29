@@ -1,33 +1,48 @@
-import * as knex from 'knex';
 import DataAccessObject from './DataAccessObects';
 import { Observation } from '../models/Observation';
+import * as vogels from 'vogels';
+import * as joi from 'joi';
 
 export default class ObservationDAO implements DataAccessObject<Observation> {
-  private database: knex;
-  
+  private model: any;
+  private vogels: any;
   constructor() {
-    this.database = knex({
-      dialect: 'pg',
-      connection: {
-        user: process.env.PG_USER,
-        password: process.env.PG_PASSWORD,
-        server: process.env.PG_SERVER,
-        database: process.env.PG_DATABASE
-      }
+  }
+
+  findOne(term: any): Promise<Observation> {
+    return new Promise<Observation>((resolve, reject) => {
+      this.model.get(term, (err, result) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(new Observation(result));
+        }
+      });
     });
   }
 
-  async findOne(term: any): Promise<Observation> {
-    return this.database.select('observations').where({ id: term }).limit(1);
+  findAll(): Promise<Observation[]> {
+    return new Promise<Observation[]>((resolve, reject) => {
+      this.model.scan().loadAll().exec((err, result) => {
+        if (err || !result) {
+          reject(err);
+        } else {
+          resolve(result.Items.map(item => new Observation(item.attrs)));
+        }
+      });
+    });
   }
 
-  async findAll(): Promise<Observation[]> {
-    return this.database.select('*').from('observations')
-      .then((results: any[]) => results.map(res => new Observation(res)));
-  }
-
-  async putOne(observation: Observation) {
-    await this.database.insert(observation).into('observations');
+  putOne(observation: Observation) {
+    return new Promise((resolve, reject) => {
+      this.model.create(observation, (err, res) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(res);
+        }
+      });
+    });
   }
 
   deleteOne(term: any) {
@@ -39,13 +54,17 @@ export default class ObservationDAO implements DataAccessObject<Observation> {
   }
 
 
-  async createTables() {
-    await this.database.schema.createTableIfNotExists('observations', t => {
-      t.increments('id').primary();
-      t.integer('location').notNullable();
-      t.float('temperature').notNullable();
-      t.string('ip');
-      t.timestamp('createdAt').defaultTo(this.database.fn.now());
+  createTables() {
+    console.log('Creating model for observations...');
+    vogels.AWS.config.update({ region: 'eu-central-1' });
+    this.model = vogels.define('observations', {
+      hashKey: 'id',
+      timestamps: true,
+      schema: {
+        id: vogels.types.uuid(),
+        location: joi.number(),
+        temperature: joi.number(),
+      }
     });
   }
 }

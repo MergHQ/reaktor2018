@@ -1,5 +1,3 @@
-import * as knex from 'knex';
-
 export default interface DataAccessObject<T> {
   createTables(): void;
   findOne(term: any): Promise<T>;
