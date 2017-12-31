@@ -16,9 +16,7 @@ export class Observation {
     Object.keys(obj).forEach(key => {
       this[key] = obj[key]
     });
-  }
 
-  locationToString(): string {
-    return this.location.toString();
+    this.locationStr = Location[this.location];
   }
 }

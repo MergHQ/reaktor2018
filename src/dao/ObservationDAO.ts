@@ -1,5 +1,5 @@
 import DataAccessObject from './DataAccessObject';
-import { Observation } from '../models/Observation';
+import { Observation, Location } from '../models/Observation';
 import * as vogels from 'vogels';
 import * as joi from 'joi';
 
@@ -21,15 +21,34 @@ export default class ObservationDAO implements DataAccessObject<Observation> {
     });
   }
 
+  findByLocation(location: string): Promise<Observation[]> {
+    return new Promise<Observation[]>((resolve, reject) => {
+      this.model
+        .scan()
+        .where('location')
+        .equals(Location[location])
+        .exec((err, result) => {
+          if (err || !result) {
+            reject(err);
+          } else {
+            resolve(result.Items.map(item => new Observation(item.attrs)));
+          }
+        });
+    });
+  }
+
   findAll(): Promise<Observation[]> {
     return new Promise<Observation[]>((resolve, reject) => {
-      this.model.scan().loadAll().exec((err, result) => {
-        if (err || !result) {
-          reject(err);
-        } else {
-          resolve(result.Items.map(item => new Observation(item.attrs)));
-        }
-      });
+      this.model
+        .scan()
+        .loadAll()
+        .exec((err, result) => {
+          if (err || !result) {
+            reject(err);
+          } else {
+            resolve(result.Items.map(item => new Observation(item.attrs)));
+          }
+        });
     });
   }
 
