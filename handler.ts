@@ -7,7 +7,7 @@ import { Observation } from './src/models/Observation';
 
 import { APIGatewayEvent, Context, Callback } from 'aws-lambda';
 
-export async function getObservations(event, context, callback) {
+export async function getObservations(event: APIGatewayEvent, context: Context, callback: Callback) {
   // Initialize data access object for observations.
   let observationDao = new ObservationDAO();
   observationDao.createTables();
@@ -26,7 +26,7 @@ export async function getObservations(event, context, callback) {
   createResponse(200, observations, null, callback);
 }
 
-export async function addObservation(event, context, callback) {
+export async function addObservation(event: APIGatewayEvent, context: Context, callback: Callback) {
   // Initialize data access object for observations.
   let observationDao = new ObservationDAO();
   observationDao.createTables();
@@ -52,7 +52,11 @@ export async function getLocationObservations(event: APIGatewayEvent, context: C
 
   let observations: Observation[];
   try {
-    observations = await observationDao.findByLocation(event.pathParameters.location);
+    observations = await observationDao.findByLocation(
+      event.pathParameters.location, 
+      (event.queryStringParameters && event.queryStringParameters.filterTo24h) ? true : false,
+      (event.queryStringParameters && event.queryStringParameters.sortTempDes) ? true : false
+    );
   } catch (e) {
     if (e) {
       console.error(e);

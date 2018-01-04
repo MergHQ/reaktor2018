@@ -21,16 +21,28 @@ export default class ObservationDAO implements DataAccessObject<Observation> {
     });
   }
 
-  findByLocation(location: string): Promise<Observation[]> {
+  findByLocation(location: string, filterTo24h: boolean = false, sortTempDesc: boolean = false): Promise<Observation[]> {
     return new Promise<Observation[]>((resolve, reject) => {
-      this.model
+      let query = this.model
         .scan()
         .where('location')
         .equals(Location[location])
-        .exec((err, result) => {
+
+        if (filterTo24h) {
+          query = query
+            .where('createdAt')
+              .gte(
+                new Date(Date.now() - (24 * 60 * 60 * 1000)).toISOString());
+        }
+
+        query.exec((err, result) => {
           if (err || !result) {
             reject(err);
           } else {
+            if (sortTempDesc) {
+              // TODO: Sort with DynamoDB
+              result.Items.sort((a, b) => a.temperature - b.temperature);
+            }
             resolve(result.Items.map(item => new Observation(item.attrs)));
           }
         });
@@ -71,7 +83,6 @@ export default class ObservationDAO implements DataAccessObject<Observation> {
   updateOne(term: any, observation: Observation) {
 
   }
-
 
   createTables() {
     console.log('Creating model for observations...');
