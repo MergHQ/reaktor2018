@@ -3,7 +3,7 @@ import * as bluebird from 'bluebird';
 global.Promise = bluebird;
 
 import ObservationDAO from './src/dao/ObservationDAO';
-import { Observation } from './src/models/Observation';
+import { Observation, LocationObservations } from './src/models/Observation';
 
 import { APIGatewayEvent, Context, Callback } from 'aws-lambda';
 
@@ -50,12 +50,13 @@ export async function getLocationObservations(event: APIGatewayEvent, context: C
   let observationDao = new ObservationDAO();
   observationDao.createTables();
 
-  let observations: Observation[];
+  let observations: Observation[] | LocationObservations;
   try {
+    console.log(observations);
     observations = await observationDao.findByLocation(
       event.pathParameters.location, 
       (event.queryStringParameters && event.queryStringParameters.filterTo24h) ? true : false,
-      (event.queryStringParameters && event.queryStringParameters.sortTempDes) ? true : false
+      (event.queryStringParameters && event.queryStringParameters.sortTempDesc) ? true : false
     );
   } catch (e) {
     if (e) {

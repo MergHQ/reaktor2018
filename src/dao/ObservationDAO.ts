@@ -1,5 +1,5 @@
 import DataAccessObject from './DataAccessObject';
-import { Observation, Location } from '../models/Observation';
+import { Observation, Location, LocationObservations } from '../models/Observation';
 import * as vogels from 'vogels';
 import * as joi from 'joi';
 
@@ -21,8 +21,8 @@ export default class ObservationDAO implements DataAccessObject<Observation> {
     });
   }
 
-  findByLocation(location: string, filterTo24h: boolean = false, sortTempDesc: boolean = false): Promise<Observation[]> {
-    return new Promise<Observation[]>((resolve, reject) => {
+  findByLocation(location: string, filterTo24h: boolean = false, sortTempDesc: boolean = false): Promise<Observation[]> | Promise<LocationObservations> {
+    return new Promise<any>((resolve, reject) => {
       let query = this.model
         .scan()
         .where('location')
@@ -41,7 +41,7 @@ export default class ObservationDAO implements DataAccessObject<Observation> {
           } else {
             if (sortTempDesc) {
               // TODO: Sort with DynamoDB
-              result.Items.sort((a, b) => a.temperature - b.temperature);
+              resolve(new LocationObservations(result.Items.map(item => new Observation(item.attrs))));
             }
             resolve(result.Items.map(item => new Observation(item.attrs)));
           }
