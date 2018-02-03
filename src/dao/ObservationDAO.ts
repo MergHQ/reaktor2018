@@ -41,8 +41,9 @@ export default class ObservationDAO implements DataAccessObject<Observation> {
           } else {
             if (sortTempDesc) {
               // TODO: Sort with DynamoDB
-              resolve(new LocationObservations(result.Items.map(item => new Observation(item.attrs))));
+              return resolve(new LocationObservations(result.Items.map(item => new Observation(item.attrs))));
             }
+            result.Items.sort((a, b) => new Date(b.attrs.createdAt).getTime() - new Date(a.attrs.createdAt).getTime());
             resolve(result.Items.map(item => new Observation(item.attrs)));
           }
         });
