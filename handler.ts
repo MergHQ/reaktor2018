@@ -69,7 +69,7 @@ export async function getLocationObservations(event: APIGatewayEvent, context: C
   createResponse(200, observations, null, callback);
 }
 
-function createResponse(status: number, body: Object | null, message: string | null, callback: Function) {
+function createResponse(status: number, body: Object | null, message: string | null, callback: Callback) {
   body = {
     ok: 200 === status,
     message,
@@ -78,6 +78,9 @@ function createResponse(status: number, body: Object | null, message: string | n
 
   return callback(null, {
     statusCode: status,
+    headers: {
+      'Access-Control-Allow-Origin': '*'
+    },
     body: JSON.stringify(body)
   });
 }

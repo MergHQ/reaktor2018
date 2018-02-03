@@ -24,6 +24,7 @@ export class Observation {
 
 export class LocationObservations {
   location: number;
+  latestObservation: number | null;
   maxTemp: number;
   minTemp: number;
 
@@ -36,6 +37,7 @@ export class LocationObservations {
    */
   constructor(rawObservations: Observation[]) {
     rawObservations.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    this.latestObservation = rawObservations.length ? rawObservations[0].temperature : null;
     this.location = rawObservations.length ? rawObservations[0].location : 0;
     rawObservations.sort((a, b) => b.temperature - a.temperature);
     this.maxTemp = rawObservations.length ? rawObservations[0].temperature : 0;
